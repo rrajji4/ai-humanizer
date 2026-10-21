@@ -5,30 +5,33 @@ export async function POST(req) {
     const { text } = await req.json();
     if (!text) return NextResponse.json({ error: 'Text is required' }, { status: 400 });
 
-    // Hamesha free chalne wali Google Gemini API Key
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey.trim() === "") {
-      return NextResponse.json({ error: 'Free API Key (GEMINI_API_KEY) not found in Vercel Settings.' }, { status: 500 });
+      return NextResponse.json({ error: 'GEMINI_API_KEY not found in Vercel Settings.' }, { status: 500 });
     }
 
-    // Step 1: Content Generation (Gemini API Call)
     const genUrl = `https://googleapis.com{apiKey}`;
     
+    // Step 1: Content Generation
     const rawResponse = await fetch(genUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: `You are a helpful research assistant. Write about: ${text}` }] }]
       })
     });
 
     const rawData = await rawResponse.json();
+    
+    // Agar Google Cloud koi error return kare toh use read karna
+    if (rawData.error) {
+      return NextResponse.json({ error: `Google API Error: ${rawData.error.message}` }, { status: 500 });
+    }
+
     const rawText = rawData.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to generate initial text.";
 
-    // Step 2: Humanizer Engine (Making it AI undetectable)
+    // Step 2: Humanizer Engine
     const humanizedResponse = await fetch(genUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: `You are an expert human content writer. Rewrite the following text to make it sound 100% human-written and score 100% human on AI detectors. Use varied sentence lengths and natural language: ${rawText}` }] }]
       })
