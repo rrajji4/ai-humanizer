@@ -1,46 +1,44 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// OpenAI/Groq client initialize karna
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY,
-  // Agar aap Groq use kar rahe hain toh baseUrl uncomment karein, warna OpenAI ke liye ise delete kar sakte hain
-  // baseURL: "https://groq.com" 
-});
-
-export async function POST(request) {
+export async function POST(req) {
   try {
-    const { text } = await request.json();
+    const { text } = await req.json();
+    if (!text) return NextResponse.json({ error: 'Text is required' }, { status: 400 });
 
-    if (!text) {
-      return NextResponse.json({ error: 'Text is required' }, { status: 400 });
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey || apiKey.trim() === "") {
+      return NextResponse.json({ error: 'API Key not found' }, { status: 500 });
     }
 
-    // AI Humanizer Logic / Prompt
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Ya jo bhi model aap use kar rahe hain (jaise 'llama-3.1-8b-instant' groq ke liye)
+    const openai = new OpenAI({ apiKey: apiKey });
+
+    // Step 1: Content Generation
+    const rawResponse = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are a helpful research assistant.' },
+        { role: 'user', content: text }
+      ],
+    });
+
+    const rawText = rawResponse.choices.message.content;
+
+    // Step 2: Humanizer Engine
+    const humanizedResponse = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: 'You are an expert AI Humanizer. Rewrite the provided text to make it sound 100% human-written, natural, and engaging. Remove any AI-generated footprints while maintaining the original meaning.'
+          content: 'You are an expert human content writer. Rewrite the text to score 100% human on detectors. Use varied sentence lengths.'
         },
-        {
-          role: 'user',
-          content: text
-        }
+        { role: 'user', content: rawText }
       ],
-      temperature: 0.7,
     });
 
-    const humanizedText = response.choices[0].message.content;
-    return NextResponse.json({ output: humanizedText }, { status: 200 });
-
+    return NextResponse.json({ result: humanizedResponse.choices.message.content });
   } catch (error) {
-    console.error('Full API Error:', error);
-    // Syntax Error yahan fixed hai (Backticks check karein)
-    return NextResponse.json(
-      { error: `AI Engine Error: ${error.message || error}` }, 
-      { status: 500 }
-    );
+    // FIX: Yahan backticks (``) laga diye hain taaki syntax error na aaye
+    return NextResponse.json({ error: `AI Engine Error: ${error.message || error}` }, { status: 500 });
   }
 }
