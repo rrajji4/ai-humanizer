@@ -15,7 +15,7 @@ export default function Home() {
 
     // 100% PROXY FIX: Direct laptop browser se Google servers par call jayegi
     // Niche apni real Google Cloud API Key (AIzaSy...) paste karein:
-    const apiKey = "AIzaSy..."; 
+    const apiKey = "AQ.Ab8RN6IvnaI1tlibZ6luUu-DM_8lKSjUl8g44dl4C9B5GDzvSQ"; 
 
     if (!apiKey || apiKey === "AIzaSy...") {
       setOutput("Error: Please replace 'AIzaSy...' in app/page.js with your real Google Cloud API Key.");
