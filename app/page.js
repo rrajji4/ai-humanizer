@@ -17,7 +17,8 @@ export default function Home() {
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        // FIX: Yahan 'prompt' ko 'text' naam se bheja ja raha hai taaki backend ise read kar sake
+        body: JSON.stringify({ text: prompt }),
       });
 
       const data = await response.json();
@@ -68,10 +69,10 @@ export default function Home() {
         </form>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '14px', fontWeight: '600', color: '#cbd5e1' }}>100% Human Output:</span>
           </div>
-          <div style={{ width: '100%', minHeight: '200px', backgroundColor: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '16px', color: '#cbd5e1', overflowY: 'auto', whitespace: 'pre-wrap', lineHeight: '1.6' }}>
+          <div style={{ width: '100%', minHeight: '200px', backgroundColor: '#020617', border: '1px solid #334155', borderRadius: '12px', padding: '16px', color: '#cbd5e1', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
             {output ? output : <span style={{ color: '#475569', fontStyle: 'italic' }}>Your humanized text will appear here...</span>}
           </div>
         </div>
