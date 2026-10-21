@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 export async function POST(req) {
   try {
@@ -11,7 +11,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'GEMINI_API_KEY not found in Vercel Settings.' }, { status: 500 });
     }
 
-    // Official Google Client Initialize karna
+    // New Google Gen AI Client Initialize
     const ai = new GoogleGenAI({ apiKey: apiKey });
 
     // Step 1: Raw Content Generation
@@ -20,12 +20,13 @@ export async function POST(req) {
       contents: `You are a helpful research assistant. Write about: ${text}`,
     });
     
+    // Naye SDK me text read karne ka tarika
     const rawText = rawResult.text || "Failed to generate initial text.";
 
     // Step 2: Humanizer Engine (AI Detectors bypass karne ke liye)
     const humanResult = await ai.models.generateContent({
       model: 'gemini-1.5-flash',
-      contents: `You are an expert human content writer. Rewrite the following text to make it sound 100% human-written and score 100% human on AI detectors. Use varied sentence lengths and natural language: ${rawText}`,
+      contents: `You are an expert human content writer. Rewrite the following text to make it sound 100% human-written, natural, and score 100% human on AI detectors. Use varied sentence lengths: ${rawText}`,
     });
 
     const humanizedText = humanResult.text || "Conversion failed.";
