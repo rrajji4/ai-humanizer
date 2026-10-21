@@ -13,58 +13,22 @@ export default function Home() {
     setLoading(true);
     setOutput('');
 
-    // 100% PROXY FIX: Direct laptop browser se Google servers par call jayegi
-    // Niche apni real Google Cloud API Key (AIzaSy...) paste karein:
-    const apiKey = "AQ.Ab8RN6IvnaI1tlibZ6luUu-DM_8lKSjUl8g44dl4C9B5GDzvSQ"; 
-
-    if (!apiKey || apiKey === "AIzaSy...") {
-      setOutput("Error: Please replace 'AIzaSy...' in app/page.js with your real Google Cloud API Key.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const targetUrl = `https://googleapis.com{apiKey}`;
-
-      // Step 1: Raw Content Generation
-      const rawResponse = await fetch(targetUrl, {
+      // सुरक्षित तरीका: डायरेक्ट बैकएंड API को डेटा भेजना (कोई चाबी चोरी नहीं होगी)
+      const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `You are a helpful research assistant. Write about: ${prompt}` }] }]
-        })
+        body: JSON.stringify({ text: prompt }),
       });
 
-      const rawData = await rawResponse.json();
-      if (rawData.error) {
-        setOutput(`Google API Error: ${rawData.error.message}`);
-        setLoading(false);
-        return;
+      const data = await response.json();
+      if (data.result) {
+        setOutput(data.result);
+      } else {
+        setOutput(data.error || 'Failed to generate human text.');
       }
-
-      const rawText = rawData.candidates?.[0]?.content?.parts?.[0]?.text || "No text generated.";
-
-      // Step 2: Humanizer Engine (AI Detectors bypass karne ke liye redirection)
-      const humanResponse = await fetch(targetUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `You are an expert human content writer. Rewrite the following text to make it sound 100% human-written, natural, and score 100% human on AI detectors. Use varied sentence lengths and natural flow: ${rawText}` }] }]
-        })
-      });
-
-      const humanData = await humanResponse.json();
-      if (humanData.error) {
-        setOutput(`Google Humanizer Error: ${humanData.error.message}`);
-        setLoading(false);
-        return;
-      }
-
-      const humanizedText = humanData.candidates?.[0]?.content?.parts?.[0]?.text || "Humanization failed.";
-      setOutput(humanizedText);
-
     } catch (err) {
-      setOutput(`Connection Failed: ${err.message || err}. Please try again.`);
+      setOutput('Connection Failed. Please try again.');
     } finally {
       setLoading(false);
     }
